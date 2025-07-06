@@ -100,7 +100,7 @@ cdn:
 avatar: 'assets/img/Transformers.jpeg'
 
 favicon:
-  path: /assets/img/favicon.png
+  path: /assets/img/favicon.ico
 
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
