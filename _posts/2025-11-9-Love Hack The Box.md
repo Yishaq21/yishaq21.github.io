@@ -1,0 +1,190 @@
+---
+title: Love | Hack The Box
+description: Resolucion de la maquina "Love" de la plataforma HTB sistema basado en Windows explotando una vulnerabilidad SSRF y RCE.
+date: 2025-09:11 10:00:0 +0000
+categories: [Machine, HackTheBox]
+tags: [SSRF, Windows, Nmap, RCE]
+pin: false
+mermaid: true
+---
+
+## Reconocimiento
+
+Primero verificamos conexcion con la maquina `Love` por medio del comando `Ping`:
+
+``` Shell
+ping -c 1 10.129.48.103
+```
+Nos responde asi:
+
+``` Shell
+PING 10.129.48.103 (10.129.48.103) 56(84) bytes of data.
+64 bytes from 10.129.48.103: icmp_seq=1 ttl=127 time=167 ms
+
+--- 10.129.48.103 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 166.757/166.757/166.757/0.000 ms
+```
+Esto nos confirma conecxion con la maquina.
+Tenemos el `TTL`*Time To live* que Su propósito principal es limitar el tiempo o la cantidad de "saltos" (hops) que un paquete de datos o un registro de información puede existir antes de ser descartado o revalidado.
+
+Windows ---> 128
+Linux ---> 64
+
+### Enumeracion
+
+Vamos a realizar un escaneo con `nmap` para realizar una busqueda de puertos con el siguiente comando:
+
+``` shell
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 10.129.48.103 -oG allPorts
+```
+
+*Info del comando*
+
+| Parámetro       | Descripción                                                                     |
+| --------------- | ------------------------------------------------------------------------------- |
+| -p-             | Escanea todos los puertos (65535)                                               |
+| -open           | Solo los que esten abiertos                                                     |
+| -sS             | no completa el handshake                                                        |
+| --min-rate 5000 | Enviar mínimo **5000 paquetes por segundo**                                     |
+| -vvv            | Nos va a permitir ver en consola lo que se va encontrando                       |
+| -n              | No resolver DNS                                                                 |
+| -Pn             | No hacer ping                                                                   |
+| -oG allPorts    | Salida en formato grepable(Grepable Output) y se guarda en el archivo allPorts. |
+
+Resultado del escaneo:
+
+``` Shell
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-10-17 00:49 CST
+Nmap scan report for 10.129.48.103
+Host is up, received user-set (0.15s latency).
+Scanned at 2025-10-17 00:49:05 CST for 18s
+Not shown: 63500 closed tcp ports (reset), 2017 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT      STATE SERVICE      REASON
+80/tcp    open  http         syn-ack ttl 127
+135/tcp   open  msrpc        syn-ack ttl 127
+139/tcp   open  netbios-ssn  syn-ack ttl 127
+443/tcp   open  https        syn-ack ttl 127
+445/tcp   open  microsoft-ds syn-ack ttl 127
+3306/tcp  open  mysql        syn-ack ttl 127
+5000/tcp  open  upnp         syn-ack ttl 127
+5040/tcp  open  unknown      syn-ack ttl 127
+5985/tcp  open  wsman        syn-ack ttl 127
+5986/tcp  open  wsmans       syn-ack ttl 127
+47001/tcp open  winrm        syn-ack ttl 127
+49664/tcp open  unknown      syn-ack ttl 127
+49665/tcp open  unknown      syn-ack ttl 127
+49666/tcp open  unknown      syn-ack ttl 127
+49667/tcp open  unknown      syn-ack ttl 127
+49668/tcp open  unknown      syn-ack ttl 127
+49669/tcp open  unknown      syn-ack ttl 127
+49670/tcp open  unknown      syn-ack ttl 127
+
+Read data files from: /usr/share/nmap
+Nmap done: 1 IP address (1 host up) scanned in 18.85 seconds
+```
+
+Ahora, vamos a realizar otro escaneo, donde veremos la version de cada servicio:
+
+```shell
+nmap -sC -sV -p80,135,139,443,445,3306,5000,5040,5985,5986,7680,47001,49664,49665,49666,49667,49668,49669,49670 10.129.48.103 -oN targeted
+```
+*Info de los parametros*
+
+| Parametro | Descripcion                                            |
+| --------- | ------------------------------------------------------ |
+| -sC       | Muestra todos los scripts relacionados con el servicio |
+| -sV       | Nos permite ver la version                             |
+| -p        | Escaneo de puertos                                     |
+| -oN       | Guarda el Output en un archivo                         |
+
+Resultado del escaneo:
+
+``` Shell
+PORT      STATE  SERVICE      VERSION
+80/tcp    open   http         Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1j PHP/7.3.27)
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1j PHP/7.3.27
+| http-cookie-flags:                                           
+|   /:                                                         
+|     PHPSESSID:                                               
+|_      httponly flag not set                                  
+|_http-title: Voting System using PHP                          
+135/tcp   open   msrpc        Microsoft Windows RPC            
+139/tcp   open   netbios-ssn  Microsoft Windows netbios-ssn
+443/tcp   open   ssl/http     Apache httpd 2.4.46 (OpenSSL/1.1.1j PHP/7.3.27)
+| ssl-cert: Subject: commonName=staging.love.htb/organizationName=ValentineCorp/stateOrProvinceName=m/countryName=in
+| Not valid before: 2021-01-18T14:00:16
+|_Not valid after:  2022-01-18T14:00:16
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1j PHP/7.3.27
+| tls-alpn: 
+|_  http/1.1
+|_http-title: 403 Forbidden
+|_ssl-date: TLS randomness does not represent time
+445/tcp   open   microsoft-ds Windows 10 Pro 19042 microsoft-ds (workgroup: WORKGROUP)
+3306/tcp  open   mysql        MariaDB 10.3.24 or later (unauthorized)
+5000/tcp  open   http         Apache httpd 2.4.46 (OpenSSL/1.1.1j PHP/7.3.27)
+|_http-title: 403 Forbidden
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1j PHP/7.3.27
+5040/tcp  open   unknown
+5985/tcp  open   http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+5986/tcp  open   ssl/http     Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+| ssl-cert: Subject: commonName=LOVE
+| Subject Alternative Name: DNS:LOVE, DNS:Love
+| Not valid before: 2021-04-11T14:39:19
+|_Not valid after:  2024-04-10T14:39:19
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_ssl-date: 2025-10-18T01:30:48+00:00; +21m33s from scanner time.
+| tls-alpn: 
+|_  http/1.1
+7680/tcp  closed pando-pub
+47001/tcp open   http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open   msrpc        Microsoft Windows RPC
+49665/tcp open   msrpc        Microsoft Windows RPC
+49666/tcp open   msrpc        Microsoft Windows RPC
+49667/tcp open   msrpc        Microsoft Windows RPC
+49668/tcp open   msrpc        Microsoft Windows RPC
+49669/tcp open   msrpc        Microsoft Windows RPC
+49670/tcp open   msrpc        Microsoft Windows RPC
+Service Info: Hosts: www.example.com, LOVE, www.love.htb; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb-os-discovery: 
+|   OS: Windows 10 Pro 19042 (Windows 10 Pro 6.3)
+|   OS CPE: cpe:/o:microsoft:windows_10::-
+|   Computer name: Love
+|   NetBIOS computer name: LOVE\x00
+|   Workgroup: WORKGROUP\x00
+|_  System time: 2025-10-17T18:30:36-07:00
+|_clock-skew: mean: 2h06m34s, deviation: 3h30m02s, median: 21m32s
+| smb2-time: 
+|   date: 2025-10-18T01:30:35
+|_  start_date: N/A
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+
+```
+### Enumeracion WEB(Puerto 80)
+
+Realizamos un escaneo con `whatweb` para identificar que tecnologias se utilizan en la pagina.
+
+``` Shell
+whatweb 10.129.48.103
+```
+
+resultado
+```shell
+http://10.129.48.103 [200 OK] Apache[2.4.46], Bootstrap, Cookies[PHPSESSID], Country[RESERVED][ZZ], HTML5, HTTPServer[Apache/2.4.46 (Win64) OpenSSL/1.1.1j PHP/7.3.27], IP[10.129.48.103], JQuery, OpenSSL[1.1.1j], PHP[7.3.27], PasswordField[password], Script, Title[Voting System using PHP], X-Powered-By[PHP/7.3.27], X-UA-Compatible[IE=edge]
+https://10.129.48.103 [403 Forbidden] Apache[2.4.46], Country[RESERVED][ZZ], HTTPServer[Apache/2.4.46 (Win64) OpenSSL/1.1.1j PHP/7.3.27], IP[10.129.48.103], OpenSSL[1.1.1j], PHP[7.3.27], Title[403 Forbidden]
+```
+
