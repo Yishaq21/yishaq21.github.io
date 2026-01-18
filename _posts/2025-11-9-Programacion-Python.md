@@ -349,9 +349,9 @@ Dicho simple:
     El ámbito define desde dónde una variable puede ser vista y utilizada.
 
 #### Tipos de ámbito en Python
-- Variables locales
+- Variables global
 
-`¿Qué es una variable global?`
+**¿Qué es una variable global?**
 
 Una variable global es aquella que se define fuera de funciones.
 Puede usarse en todo el archivo
@@ -369,7 +369,8 @@ mostrar()
 La función puede leer la variable global sin problema.
 
 - Variables globales
-¿Qué es una variable local?
+
+**¿Qué es una variable globla?**
 
 Una variable local se define dentro de una función.
 Solo existe dentro de esa función
@@ -384,8 +385,8 @@ def mi_funcion():
 mi_funcion()
 print(texto)  # ❌ Error
 ```
-
 texto no existe fuera de la función.
+
 ---
 
 ## Funciones lambda
