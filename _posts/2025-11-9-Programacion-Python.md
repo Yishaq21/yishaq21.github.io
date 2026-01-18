@@ -358,7 +358,7 @@ Puede usarse en todo el archivo
 Existe durante toda la ejecución del programa
 
 Ejemplo
-``` Python
+```python
 mensaje = "Soy global"
 
 def mostrar():
@@ -376,7 +376,7 @@ Solo existe dentro de esa función
 Fuera de ella no se puede usar
 
 Ejemplo
-``` Python
+```python
 def mi_funcion():
     texto = "Soy local"
     print(texto)
