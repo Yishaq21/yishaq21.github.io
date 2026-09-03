@@ -1,7 +1,7 @@
 ---
 title: Data Structures | Programming
 description: Recursion, stacks, queues, lists, trees, and graphs explained with Python and Java examples
-date: 2026-04-22 10:00:0 +0000
+date: 2026-04-10 10:00:0 +0000
 categories: [Programming, Python]
 tags: [Python, Programming]
 pin: false
