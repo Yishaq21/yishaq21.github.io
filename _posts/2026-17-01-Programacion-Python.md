@@ -1,6 +1,6 @@
 ---
 title: Python | Programacion
-description: Cosas basicas para aprender a programar python
+description: Learn python basics
 date: 2026-01-17 10:00:0 +0000
 categories: [Programming, Python]
 tags: [Python, Programming]
