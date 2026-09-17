@@ -1,7 +1,7 @@
 ---
 title: Concepts about EMAIL
 description: Concepts very importants to investigate email headers
-date: 2025-05-21 10:00:00 +0000
+date: 2026-09-15 10:00:00 +0000
 categories: [Information]
 tags: [Sherlock, HacktheBox, EMAIL]
 pin: false
