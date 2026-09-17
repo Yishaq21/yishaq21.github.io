@@ -1,7 +1,7 @@
 ---
 title: Phishing_Email | HTB-Sherlock
 description: Investigate a email if contain phising.
-date: 2026-15-09 10:00:0 +0000
+date: 2026-09-15 10:00:0 +0000
 categories: [Sherlock]
 tags: [Sherlock, HacktheBox, EMAIL]
 pin: false
