@@ -1,12 +1,13 @@
 ---
 title: Concepts about EMAIL
 description: Concepts very importants to investigate email headers
-date: 2026-15-09 10:00:0 +0000
+date: 2025-05-21 10:00:00 +0000
 categories: [Information]
 tags: [Sherlock, HacktheBox, EMAIL]
 pin: false
 mermaid: true
 ---
+
 
 # Blue Team — Email Analysis Concepts
 
